@@ -2,6 +2,7 @@ module "shared" {
   source = "../../shared"
 
   environment = "dev"
+  aws_region  = "eu-west-2"
 }
 
 module "ingestion_queue" {
