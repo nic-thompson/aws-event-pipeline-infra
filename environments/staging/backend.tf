@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "signalforge-staging-terraform-state"
-    key            = "pipeline-infra/terraform.tfstate"
+    bucket         = "signalforge-terraform-state-081277286841-eu-west-2"
+    key            = "environments/staging/terraform.tfstate"
     region         = "eu-west-2"
-    dynamodb_table = "signalforge-staging-terraform-locks"
+    dynamodb_table = "signalforge-terraform-locks"
     encrypt        = true
   }
 }
