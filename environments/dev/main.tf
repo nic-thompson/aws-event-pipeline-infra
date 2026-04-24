@@ -58,3 +58,9 @@ module "dataset_export_queue" {
   message_retention_seconds  = 604800
   max_receive_count          = 8
 }
+
+module "event_archive_bucket" {
+  source = "../../modules/event_archive_bucket"
+
+  name_prefix = module.shared.name_prefix
+}
