@@ -28,3 +28,8 @@ variable "dlq_retention_seconds" {
   type        = number
   default     = 1209600
 }
+
+variable "kms_key_arn" {
+  description = "KMS key ARN used for SQS encryption"
+  type        = string
+}

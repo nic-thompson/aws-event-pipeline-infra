@@ -3,7 +3,7 @@ resource "aws_sqs_queue" "dlq" {
 
   message_retention_seconds = var.dlq_retention_seconds
 
-  sqs_managed_sse_enabled = true
+  kms_master_key_id = var.kms_key_arn
 }
 
 resource "aws_sqs_queue" "queue" {
@@ -13,7 +13,7 @@ resource "aws_sqs_queue" "queue" {
 
   message_retention_seconds = var.message_retention_seconds
 
-  sqs_managed_sse_enabled = true
+  kms_master_key_id = var.kms_key_arn
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.dlq.arn
