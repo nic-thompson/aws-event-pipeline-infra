@@ -2,6 +2,7 @@
 
 # Terraform runtime directories
 **/.terraform/*
+**/.terraform.lock.hcl
 
 # Terraform state files
 *.tfstate
@@ -12,3 +13,4 @@ crash.log
 
 # Provider binaries
 terraform-provider-*
+*.patch
