@@ -1,15 +1,15 @@
-module "kms" {
-  source = "../../modules/kms"
-
-  alias_name = "signalforge-dev"
-  tags       = module.shared.tags
-}
-
 module "shared" {
   source = "../../shared"
 
   environment = "dev"
   aws_region  = "eu-west-2"
+}
+
+module "kms" {
+  source = "../../modules/kms"
+
+  alias_name = "signalforge-dev"
+  tags       = module.shared.tags
 }
 
 module "ingestion_queue" {
@@ -84,4 +84,88 @@ module "event_archive_bucket" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
+module "eventbridge_bus" {
+  source = "../../modules/eventbridge_bus"
+
+  name_prefix = module.shared.name_prefix
+  tags        = module.shared.tags
+}
+
+module "event_archive" {
+  source = "../../modules/eventbridge_archive"
+
+  environment    = "dev"
+  event_bus_arn  = module.eventbridge_bus.eventbridge_bus_arn
+  retention_days = 730
+}
+
+module "route_ingested_events" {
+  source = "../../modules/eventbridge_rule_to_sqs"
+
+  name_prefix    = module.shared.name_prefix
+  rule_name      = "telemetry-ingested"
+  detail_type    = "telemetry.ingested"
+  event_bus_name = module.eventbridge_bus.eventbridge_bus_name
+
+  queue_arn = module.ingestion_queue.queue_arn
+  queue_url = module.ingestion_queue.queue_url
+
+  tags = module.shared.tags
+}
+
+module "route_validated_events" {
+  source = "../../modules/eventbridge_rule_to_sqs"
+
+  name_prefix    = module.shared.name_prefix
+  rule_name      = "telemetry-validated"
+  detail_type    = "telemetry.validated"
+  event_bus_name = module.eventbridge_bus.eventbridge_bus_name
+
+  queue_arn = module.validation_queue.queue_arn
+  queue_url = module.validation_queue.queue_url
+
+  tags = module.shared.tags
+}
+
+module "route_enriched_events" {
+  source = "../../modules/eventbridge_rule_to_sqs"
+
+  name_prefix    = module.shared.name_prefix
+  rule_name      = "telemetry-enriched"
+  detail_type    = "telemetry.enriched"
+  event_bus_name = module.eventbridge_bus.eventbridge_bus_name
+
+  queue_arn = module.enrichment_queue.queue_arn
+  queue_url = module.enrichment_queue.queue_url
+
+  tags = module.shared.tags
+}
+
+module "route_generated_events" {
+  source = "../../modules/eventbridge_rule_to_sqs"
+
+  name_prefix    = module.shared.name_prefix
+  rule_name      = "feature-generated"
+  detail_type    = "feature.generated"
+  event_bus_name = module.eventbridge_bus.eventbridge_bus_name
+
+  queue_arn = module.feature_queue.queue_arn
+  queue_url = module.feature_queue.queue_url
+
+  tags = module.shared.tags
+}
+
+module "route_export_events" {
+  source = "../../modules/eventbridge_rule_to_sqs"
+
+  name_prefix    = module.shared.name_prefix
+  rule_name      = "dataset-export-requested"
+  detail_type    = "dataset.export-requested"
+  event_bus_name = module.eventbridge_bus.eventbridge_bus_name
+
+  queue_arn = module.dataset_export_queue.queue_arn
+  queue_url = module.dataset_export_queue.queue_url
+
+  tags = module.shared.tags
+}
 

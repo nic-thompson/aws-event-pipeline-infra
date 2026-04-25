@@ -1,3 +1,10 @@
+module "shared" {
+  source = "../../shared"
+
+  environment = "prod"
+  aws_region  = "eu-west-2"
+}
+
 module "kms" {
   source = "../../modules/kms"
 
@@ -5,11 +12,11 @@ module "kms" {
   tags       = module.shared.tags
 }
 
-module "shared" {
-  source = "../../shared"
+module "event_archive_bucket" {
+  source = "../../modules/event_archive_bucket"
 
-  environment = "prod"
-  aws_region  = "eu-west-2"
+  name_prefix = module.shared.name_prefix
+  kms_key_arn = module.kms.kms_key_arn
 }
 
 module "ingestion_queue" {
@@ -77,10 +84,17 @@ module "dataset_export_queue" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
-module "event_archive_bucket" {
-  source = "../../modules/event_archive_bucket"
+module "eventbridge_bus" {
+  source = "../../modules/eventbridge_bus"
 
   name_prefix = module.shared.name_prefix
-  kms_key_arn = module.kms.kms_key_arn
+  tags        = module.shared.tags
 }
 
+module "event_archive" {
+  source = "../../modules/eventbridge_archive"
+
+  event_bus_arn  = module.eventbridge_bus.eventbridge_bus_arn
+  environment    = "prod"
+  retention_days = 730
+}
