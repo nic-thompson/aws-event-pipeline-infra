@@ -65,3 +65,10 @@ module "event_archive_bucket" {
 
   name_prefix = module.shared.name_prefix
 }
+
+module "kms" {
+  source = "../../modules/kms"
+
+  alias_name = "signalforge-prod"
+  tags       = module.shared.tags
+}
