@@ -1,7 +1,31 @@
 {
-  "Comment": "SignalForge EventBridge archive replay workflow with optional filtering",
-  "StartAt": "StartReplay",
+  "Comment": "SignalForge archive replay workflow with audit logging",
+  "StartAt": "RecordReplayStarted",
   "States": {
+
+    "RecordReplayStarted": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${replay_audit_table_name}",
+        "Item": {
+          "replay_name": {
+            "S.$": "$.replay_name"
+          },
+          "status": {
+            "S": "STARTED"
+          },
+          "start_time": {
+            "S.$": "$.start_time"
+          },
+          "end_time": {
+            "S.$": "$.end_time"
+          }
+        }
+      },
+      "Next": "StartReplay"
+    },
+
     "StartReplay": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:eventbridge:startReplay",
@@ -15,7 +39,31 @@
         "EventEndTime.$": "$.end_time",
         "EventPattern.$": "$.event_pattern"
       },
+      "Next": "RecordReplayCompleted"
+    },
+
+    "RecordReplayCompleted": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${replay_audit_table_name}",
+        "Key": {
+          "replay_name": {
+            "S.$": "$.replay_name"
+          }
+        },
+        "UpdateExpression": "SET #s = :status",
+        "ExpressionAttributeNames": {
+          "#s": "status"
+        },
+        "ExpressionAttributeValues": {
+          ":status": {
+            "S": "COMPLETED"
+          }
+        }
+      },
       "End": true
     }
+
   }
 }

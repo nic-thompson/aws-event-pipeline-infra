@@ -5,12 +5,14 @@ module "shared" {
   aws_region  = "eu-west-2"
 }
 
+
 module "kms" {
   source = "../../modules/kms"
 
   alias_name = "signalforge-dev"
   tags       = module.shared.tags
 }
+
 
 module "ingestion_queue" {
   source = "../../modules/pipeline_queue"
@@ -25,6 +27,7 @@ module "ingestion_queue" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
+
 module "validation_queue" {
   source = "../../modules/pipeline_queue"
 
@@ -37,6 +40,7 @@ module "validation_queue" {
 
   kms_key_arn = module.kms.kms_key_arn
 }
+
 
 module "enrichment_queue" {
   source = "../../modules/pipeline_queue"
@@ -51,6 +55,7 @@ module "enrichment_queue" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
+
 module "feature_queue" {
   source = "../../modules/pipeline_queue"
 
@@ -63,6 +68,7 @@ module "feature_queue" {
 
   kms_key_arn = module.kms.kms_key_arn
 }
+
 
 module "dataset_export_queue" {
   source = "../../modules/pipeline_queue"
@@ -77,6 +83,7 @@ module "dataset_export_queue" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
+
 module "event_archive_bucket" {
   source = "../../modules/event_archive_bucket"
 
@@ -84,12 +91,14 @@ module "event_archive_bucket" {
   kms_key_arn = module.kms.kms_key_arn
 }
 
+
 module "eventbridge_bus" {
   source = "../../modules/eventbridge_bus"
 
   name_prefix = module.shared.name_prefix
   tags        = module.shared.tags
 }
+
 
 module "event_archive" {
   source = "../../modules/eventbridge_archive"
@@ -99,6 +108,23 @@ module "event_archive" {
   retention_days = 730
 }
 
+
+########################################
+# Replay audit table (must exist first)
+########################################
+
+module "replay_audit_table" {
+  source = "../../modules/replay_audit_table"
+
+  environment = "dev"
+  tags        = module.shared.tags
+}
+
+
+########################################
+# Replay workflow
+########################################
+
 module "replay_workflow" {
   source = "../../modules/eventbridge_replay_workflow"
 
@@ -107,15 +133,16 @@ module "replay_workflow" {
   event_bus_arn    = module.eventbridge_bus.eventbridge_bus_arn
   target_queue_arn = module.enrichment_queue.queue_arn
 
+  replay_audit_table_arn  = module.replay_audit_table.table_arn
+  replay_audit_table_name = module.replay_audit_table.table_name
+
   tags = module.shared.tags
 }
 
-module "replay_audit_table" {
-  source = "../../modules/replay_audit_table"
 
-  environment = "dev"
-  tags        = module.shared.tags
-}
+########################################
+# Event routing rules
+########################################
 
 module "route_ingested_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
@@ -131,6 +158,7 @@ module "route_ingested_events" {
   tags = module.shared.tags
 }
 
+
 module "route_validated_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
 
@@ -144,6 +172,7 @@ module "route_validated_events" {
 
   tags = module.shared.tags
 }
+
 
 module "route_enriched_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
@@ -159,6 +188,7 @@ module "route_enriched_events" {
   tags = module.shared.tags
 }
 
+
 module "route_generated_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
 
@@ -172,6 +202,7 @@ module "route_generated_events" {
 
   tags = module.shared.tags
 }
+
 
 module "route_export_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
@@ -187,21 +218,63 @@ module "route_export_events" {
   tags = module.shared.tags
 }
 
+
+########################################
+# Export audit table (must exist first)
+########################################
+
+module "export_audit_table" {
+  source = "../../modules/export_audit_table"
+
+  environment = "dev"
+  tags        = module.shared.tags
+}
+
+
+########################################
+# Dataset export workflow
+########################################
+
+module "dataset_export_job" {
+  source = "../../modules/dataset_export_job"
+
+  environment = "dev"
+
+  export_bucket_name = module.event_archive_bucket.bucket_name
+  export_bucket_arn  = module.event_archive_bucket.bucket_arn
+
+  export_audit_table_name = module.export_audit_table.table_name
+  export_audit_table_arn  = module.export_audit_table.table_arn
+
+  kms_key_arn = module.kms.kms_key_arn
+
+  tags = module.shared.tags
+}
+
+
+########################################
+# Outputs
+########################################
+
 output "archive_arn" {
   value = module.event_archive.archive_arn
 }
+
 
 output "event_bus_arn" {
   value = module.eventbridge_bus.eventbridge_bus_arn
 }
 
+
 output "replay_state_machine_arn" {
   value = module.replay_workflow.state_machine_arn
 }
 
+
 output "enrichment_queue_url" {
   value = module.enrichment_queue.queue_url
 }
+
 
 output "replay_audit_table_name" {
   value = module.replay_audit_table.table_name

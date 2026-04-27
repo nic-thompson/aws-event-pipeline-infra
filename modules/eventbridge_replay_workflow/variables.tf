@@ -22,3 +22,11 @@ variable "tags" {
   description = "Standard resource tags applied to replay infrastructure"
   type        = map(string)
 }
+
+variable "replay_audit_table_arn" {
+  type = string
+}
+
+variable "replay_audit_table_name" {
+  type = string
+}
