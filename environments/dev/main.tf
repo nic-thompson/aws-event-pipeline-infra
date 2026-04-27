@@ -110,6 +110,13 @@ module "replay_workflow" {
   tags = module.shared.tags
 }
 
+module "replay_audit_table" {
+  source = "../../modules/replay_audit_table"
+
+  environment = "dev"
+  tags        = module.shared.tags
+}
+
 module "route_ingested_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
 
@@ -194,4 +201,8 @@ output "replay_state_machine_arn" {
 
 output "enrichment_queue_url" {
   value = module.enrichment_queue.queue_url
+}
+
+output "replay_audit_table_name" {
+  value = module.replay_audit_table.table_name
 }

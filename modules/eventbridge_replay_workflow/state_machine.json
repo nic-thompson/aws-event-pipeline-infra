@@ -1,5 +1,5 @@
 {
-  "Comment": "Replay telemetry archive window",
+  "Comment": "SignalForge EventBridge archive replay workflow with optional filtering",
   "StartAt": "StartReplay",
   "States": {
     "StartReplay": {
@@ -12,7 +12,8 @@
           "Arn.$": "$.event_bus_arn"
         },
         "EventStartTime.$": "$.start_time",
-        "EventEndTime.$": "$.end_time"
+        "EventEndTime.$": "$.end_time",
+        "EventPattern.$": "$.event_pattern"
       },
       "End": true
     }
