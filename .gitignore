@@ -1,16 +1,22 @@
-.DS_Store
-
-# Terraform runtime directories
-**/.terraform/*
-**/.terraform.lock.hcl
-
-# Terraform state files
+# Terraform
+.terraform/
 *.tfstate
 *.tfstate.*
-
-# Crash logs
 crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
 
-# Provider binaries
-terraform-provider-*
-*.patch
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
