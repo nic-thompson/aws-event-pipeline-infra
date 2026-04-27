@@ -99,6 +99,17 @@ module "event_archive" {
   retention_days = 730
 }
 
+module "replay_workflow" {
+  source = "../../modules/eventbridge_replay_workflow"
+
+  environment      = "dev"
+  archive_arn      = module.event_archive.archive_arn
+  event_bus_arn    = module.eventbridge_bus.eventbridge_bus_arn
+  target_queue_arn = module.enrichment_queue.queue_arn
+
+  tags = module.shared.tags
+}
+
 module "route_ingested_events" {
   source = "../../modules/eventbridge_rule_to_sqs"
 
@@ -168,4 +179,3 @@ module "route_export_events" {
 
   tags = module.shared.tags
 }
-

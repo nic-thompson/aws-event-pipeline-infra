@@ -1,0 +1,20 @@
+{
+  "Comment": "Replay telemetry archive window",
+  "StartAt": "StartReplay",
+  "States": {
+    "StartReplay": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:eventbridge:startReplay",
+      "Parameters": {
+        "ReplayName.$": "$.replay_name",
+        "EventSourceArn.$": "$.archive_arn",
+        "Destination": {
+          "Arn.$": "$.event_bus_arn"
+        },
+        "EventStartTime.$": "$.start_time",
+        "EventEndTime.$": "$.end_time"
+      },
+      "End": true
+    }
+  }
+}
