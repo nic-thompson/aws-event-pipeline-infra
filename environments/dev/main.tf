@@ -179,3 +179,19 @@ module "route_export_events" {
 
   tags = module.shared.tags
 }
+
+output "archive_arn" {
+  value = module.event_archive.archive_arn
+}
+
+output "event_bus_arn" {
+  value = module.eventbridge_bus.eventbridge_bus_arn
+}
+
+output "replay_state_machine_arn" {
+  value = module.replay_workflow.state_machine_arn
+}
+
+output "enrichment_queue_url" {
+  value = module.enrichment_queue.queue_url
+}

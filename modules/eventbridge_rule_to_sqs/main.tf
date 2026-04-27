@@ -25,11 +25,19 @@ resource "aws_sqs_queue_policy" "allow_eventbridge" {
       {
         Sid    = "AllowEventBridgeSendMessage"
         Effect = "Allow"
+
         Principal = {
           Service = "events.amazonaws.com"
         }
+
         Action   = "sqs:SendMessage"
         Resource = var.queue_arn
+
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.rule.arn
+          }
+        }
       }
     ]
   })
