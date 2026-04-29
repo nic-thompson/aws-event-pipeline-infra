@@ -106,6 +106,16 @@ module "event_archive" {
   environment    = "dev"
   event_bus_arn  = module.eventbridge_bus.eventbridge_bus_arn
   retention_days = 730
+
+  event_pattern = jsonencode({
+    "detail-type" = [
+      "telemetry.ingested",
+      "telemetry.validated",
+      "telemetry.enriched",
+      "feature.generated",
+      "dataset.export-requested"
+    ]
+  })
 }
 
 
