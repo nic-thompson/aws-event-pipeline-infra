@@ -1,5 +1,5 @@
 {
-  "Comment": "SignalForge archive replay workflow with audit logging",
+  "Comment": "SignalForge archive replay workflow with audit logging and lifecycle polling",
   "StartAt": "RecordReplayStarted",
   "States": {
 
@@ -23,6 +23,7 @@
           }
         }
       },
+      "ResultPath": null,
       "Next": "StartReplay"
     },
 
@@ -39,7 +40,46 @@
         "EventEndTime.$": "$.end_time",
         "EventPattern.$": "$.event_pattern"
       },
-      "Next": "RecordReplayCompleted"
+      "ResultPath": null,
+      "Next": "WaitForReplay"
+    },
+
+    "WaitForReplay": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "DescribeReplay"
+    },
+
+    "DescribeReplay": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:eventbridge:describeReplay",
+      "Parameters": {
+        "ReplayName.$": "$.replay_name"
+      },
+      "ResultPath": "$.replay_status",
+      "Next": "CheckReplayState"
+    },
+
+    "CheckReplayState": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.replay_status.State",
+          "StringEquals": "COMPLETED",
+          "Next": "RecordReplayCompleted"
+        },
+        {
+          "Variable": "$.replay_status.State",
+          "StringEquals": "FAILED",
+          "Next": "RecordReplayFailed"
+        },
+        {
+          "Variable": "$.replay_status.State",
+          "StringEquals": "CANCELLED",
+          "Next": "RecordReplayFailed"
+        }
+      ],
+      "Default": "WaitForReplay"
     },
 
     "RecordReplayCompleted": {
@@ -63,6 +103,39 @@
         }
       },
       "End": true
+    },
+
+    "RecordReplayFailed": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${replay_audit_table_name}",
+        "Key": {
+          "replay_name": {
+            "S.$": "$.replay_name"
+          }
+        },
+        "UpdateExpression": "SET #s = :status, #r = :reason",
+        "ExpressionAttributeNames": {
+          "#s": "status",
+          "#r": "failure_reason"
+        },
+        "ExpressionAttributeValues": {
+          ":status": {
+            "S": "FAILED"
+          },
+          ":reason": {
+            "S.$": "$.replay_status.StateReason"
+          }
+        }
+      },
+      "Next": "ReplayFailed"
+    },
+
+    "ReplayFailed": {
+      "Type": "Fail",
+      "Error": "ReplayFailed",
+      "Cause": "EventBridge replay reached a terminal failure or cancelled state"
     }
 
   }
