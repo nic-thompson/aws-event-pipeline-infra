@@ -128,10 +128,9 @@ module "replay_audit_table" {
 module "replay_workflow" {
   source = "../../modules/eventbridge_replay_workflow"
 
-  environment      = "dev"
-  archive_arn      = module.event_archive.archive_arn
-  event_bus_arn    = module.eventbridge_bus.eventbridge_bus_arn
-  target_queue_arn = module.enrichment_queue.queue_arn
+  environment   = "dev"
+  archive_arn   = module.event_archive.archive_arn
+  event_bus_arn = module.eventbridge_bus.eventbridge_bus_arn
 
   replay_audit_table_arn  = module.replay_audit_table.table_arn
   replay_audit_table_name = module.replay_audit_table.table_name

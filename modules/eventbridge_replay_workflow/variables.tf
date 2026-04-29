@@ -13,20 +13,17 @@ variable "event_bus_arn" {
   type        = string
 }
 
-variable "target_queue_arn" {
-  description = "Optional downstream queue ARN for targeted replay workflows (reserved for future selective replay routing)"
-  type        = string
-}
-
 variable "tags" {
   description = "Standard resource tags applied to replay infrastructure"
   type        = map(string)
 }
 
 variable "replay_audit_table_arn" {
-  type = string
+  description = "ARN of the DynamoDB table used to record replay execution metadata"
+  type        = string
 }
 
 variable "replay_audit_table_name" {
-  type = string
+  description = "Name of the DynamoDB table used to record replay execution metadata"
+  type        = string
 }
