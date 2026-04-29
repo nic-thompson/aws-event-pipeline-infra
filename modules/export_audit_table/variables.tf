@@ -1,7 +1,9 @@
 variable "environment" {
-  type = string
+  description = "Deployment environment name (dev, staging, prod)"
+  type        = string
 }
 
 variable "tags" {
-  type = map(string)
+  description = "Common resource tags applied to the audit table"
+  type        = map(string)
 }
