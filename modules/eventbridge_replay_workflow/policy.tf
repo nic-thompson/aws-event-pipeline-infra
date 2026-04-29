@@ -26,6 +26,18 @@ resource "aws_iam_role_policy" "replay_policy" {
         Action = [
           "events:StartReplay"
         ]
+        Resource = [
+          var.archive_arn,
+          var.event_bus_arn
+        ]
+      },
+
+      {
+        Effect = "Allow"
+        Action = [
+          "events:DescribeReplay"
+        ]
+        # DescribeReplay does not support resource-level constraints
         Resource = "*"
       },
 
