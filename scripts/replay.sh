@@ -15,7 +15,7 @@ STATE_MACHINE_ARN=$(terraform -chdir="${TF_DIR}" output -raw replay_state_machin
 NAME="replay-${ENV}-$(date +%s)"
 
 if [[ -n "$TYPE" ]]; then
-  jq -n \
+  INPUT=$(jq -n \
     --arg replay_name "$NAME" \
     --arg archive_arn "$ARCHIVE_ARN" \
     --arg event_bus_arn "$BUS_ARN" \
@@ -29,9 +29,9 @@ if [[ -n "$TYPE" ]]; then
       start_time: $start_time,
       end_time: $end_time,
       event_pattern: {("detail-type"): [$type]}
-    }'
+    }')
 else
-  jq -n \
+  INPUT=$(jq -n \
     --arg replay_name "$NAME" \
     --arg archive_arn "$ARCHIVE_ARN" \
     --arg event_bus_arn "$BUS_ARN" \
@@ -43,8 +43,9 @@ else
       event_bus_arn: $event_bus_arn,
       start_time: $start_time,
       end_time: $end_time
-    }'
-fi \
-| aws stepfunctions start-execution \
-    --state-machine-arn "$STATE_MACHINE_ARN" \
-    --input file:///dev/stdin
+    }')
+fi
+
+aws stepfunctions start-execution \
+  --state-machine-arn "$STATE_MACHINE_ARN" \
+  --input "$INPUT"
